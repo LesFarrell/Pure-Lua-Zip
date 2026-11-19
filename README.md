@@ -49,10 +49,19 @@ if not ok then error(err) end
 Notes and behavior
 ------------------
 - The compressor (`deflate_lz77`) implemented in this library is a small,
-	pure-Lua LZ77-based deflater that emits fixed-Huffman blocks. It's
-	intended for portability and tests rather than maximum compression.
+	pure-Lua LZ77-based deflater that emits spec-compliant fixed-Huffman
+	blocks (readable by standard unzip tools). It is intended for
+	portability rather than maximum compression.
+- With `compress = true`, an entry uses DEFLATE only when the compressed
+	data is smaller; otherwise it is stored. Set `force_deflate = true` to
+	always use DEFLATE.
+- Limitation: the inflater handles stored and fixed-Huffman DEFLATE blocks.
+	Archives from other tools that use dynamic-Huffman blocks are not yet
+	supported.
 - ZIP64 is supported: the library will read/write ZIP64 records when
 	entries, offsets or sizes exceed 32-bit limits.
+- Extraction sanitizes entry names (including backslash separators) and
+	verifies CRC and uncompressed size before writing files.
 - Public API exported by `ziptool.lua`:
 	- `ziptool.ZipWriter` (constructor + instance methods)
 	- `ziptool.unzip_file` (extract zip into a directory)
@@ -64,12 +73,12 @@ Running tests
 Run the test suite from the repository root (requires `lua` in PATH):
 
 ```pwsh
-# normal tests
 lua tests/run_tests.lua
-
-# run heavy ZIP64 tests (sets FULL=1)
-$env:FULL='1'; lua tests/run_tests.lua
 ```
+
+The suite covers create/extract round-trips, DEFLATE output compatibility,
+store-vs-DEFLATE selection, streamed entries, ZIP64 records, name sanitizing
+and CRC verification.
 
 License
 -------
